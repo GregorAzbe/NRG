@@ -39,46 +39,6 @@ out vec4 oColor;
 @intersectCube
 @rand
 
-// void main() {
-//     vec3 rayDirection = vRayTo - vRayFrom;
-//     vec2 tbounds = max(intersectCube(vRayFrom, rayDirection), 0.0);
-//     if (tbounds.x >= tbounds.y) {
-//         oColor = vec4(0.0, 0.0, 0.0, 1.0);
-//     } else {
-//         vec3 from = mix(vRayFrom, vRayTo, tbounds.x);
-//         vec3 to = mix(vRayFrom, vRayTo, tbounds.y);
-//         float rayStepLength = distance(from, to) * uStepSize;
-
-//         float t = 0.0;
-//         vec3 pos;
-//         float val;
-//         vec4 colorSample;
-//         vec4 accumulator = vec4(0.0);
-//         float dist;
-
-//         vec2 r = rand(vec2(1.0) * uOffset);
-//         while (t < 1.0) {
-//             r = rand(r);
-//             pos = mix(from, to, t + (r * uStepSize - uStepSize * 0.5).x);
-//             val = texture(uVolume, pos ).r;
-//             colorSample = texture(uTransferFunction, vec2(val, 0.5));
-//             colorSample.rgb *= colorSample.a;
-//             if(r.y <= colorSample.a * rayStepLength){
-//                 break;
-//             }
-//             t += uStepSize;
-//         }
-//         if(t < 1.0) {
-//             oColor = colorSample;
-//         }
-//         else{
-//             oColor = vec4(0.0, 0.0, 0.0, 1.0);
-//         }
-//     }
-// }
-
-// RANDOM JITTER METOD
-//
 void main() {
     vec3 rayDirection = vRayTo - vRayFrom;
     vec2 tbounds = max(intersectCube(vRayFrom, rayDirection), 0.0);
@@ -94,27 +54,67 @@ void main() {
         float val;
         vec4 colorSample;
         vec4 accumulator = vec4(0.0);
+        float dist;
 
         vec2 r = rand(vec2(1.0) * uOffset);
-
-        while (t < 1.0 && accumulator.a < 0.99) {
+        while (t < 1.0) {
             r = rand(r);
-            pos = mix(from, to, t + (r * uStepSize - uStepSize * 0.5).x );
-            val = texture(uVolume, pos).r;
+            pos = mix(from, to, t + (r * uStepSize - uStepSize * 0.5).x);
+            val = texture(uVolume, pos ).r;
             colorSample = texture(uTransferFunction, vec2(val, 0.5));
-            colorSample.a *= rayStepLength * uAlphaCorrection;
             colorSample.rgb *= colorSample.a;
-            accumulator += (1.0 - accumulator.a) * colorSample;
+            if(r.y <= colorSample.a * rayStepLength){
+                break;
+            }
             t += uStepSize;
         }
-
-        if (accumulator.a > 1.0) {
-            accumulator.rgb /= accumulator.a;
+        if(t < 1.0) {
+            oColor = colorSample;
         }
-
-        oColor = vec4(accumulator.rgb, 1.0);
+        else{
+            oColor = vec4(0.0, 0.0, 0.0, 1.0);
+        }
     }
 }
+
+// RANDOM JITTER METOD
+//
+// void main() {
+//     vec3 rayDirection = vRayTo - vRayFrom;
+//     vec2 tbounds = max(intersectCube(vRayFrom, rayDirection), 0.0);
+//     if (tbounds.x >= tbounds.y) {
+//         oColor = vec4(0.0, 0.0, 0.0, 1.0);
+//     } else {
+//         vec3 from = mix(vRayFrom, vRayTo, tbounds.x);
+//         vec3 to = mix(vRayFrom, vRayTo, tbounds.y);
+//         float rayStepLength = distance(from, to) * uStepSize;
+
+//         float t = 0.0;
+//         vec3 pos;
+//         float val;
+//         vec4 colorSample;
+//         vec4 accumulator = vec4(0.0);
+
+//         vec2 r = rand(vec2(1.0) * uOffset);
+
+//         while (t < 1.0 && accumulator.a < 0.99) {
+//             r = rand(r);
+//             pos = mix(from, to, t + (r * uStepSize - uStepSize * 0.5).x );
+//             val = texture(uVolume, pos).r;
+//             colorSample = texture(uTransferFunction, vec2(val, 0.5));
+//             colorSample.a *= rayStepLength * uAlphaCorrection;
+//             colorSample.rgb *= colorSample.a;
+//             accumulator += (1.0 - accumulator.a) * colorSample;
+//             t += uStepSize;
+//         }
+
+//         if (accumulator.a > 1.0) {
+//             accumulator.rgb /= accumulator.a;
+//         }
+
+//         oColor = vec4(accumulator.rgb, 1.0);
+//     }
+// }
 
 // #section EAMIntegrate/vertex
 
